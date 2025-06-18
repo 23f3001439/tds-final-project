@@ -232,6 +232,11 @@ async def health_check():
         logger.error(f"Health check failed: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+@app.get("/")
+async def root():
+    return {"message": "✅ TDS Final Project is Live. Use /query or /health"}
+
+
 # --- MAIN ENTRY POINT ---
 if __name__ == "__main__":
     import uvicorn
