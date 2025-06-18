@@ -233,9 +233,17 @@ async def health_check():
         return JSONResponse(status_code=500, content={"error": str(e)})
 from fastapi import Request
 
+from fastapi import Request
+
 @app.api_route("/", methods=["GET", "POST"])
 async def root(request: Request):
-    return {"message": "✅ TDS Final Project is Live. Use /query or /health"}
+    return {
+        "answer": "✅ TDS Final Project backend is live. Use /query endpoint to ask questions.",
+        "links": [
+            {"url": "https://tds-final-project-deploy.onrender.com/query", "text": "Query Endpoint"},
+            {"url": "https://tds-final-project-deploy.onrender.com/health", "text": "Health Check"}
+        ]
+    }
 
 
 
