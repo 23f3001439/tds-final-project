@@ -172,11 +172,17 @@ def parse_llm_response(response):
 
 # --- API ROUTES ---
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
 @app.post("/query")
 async def query_knowledge_base(request: QueryRequest):
     try:
         if not API_KEY:
             return JSONResponse(status_code=500, content={"error": "API_KEY not set."})
+
+        if not request.question or request.question.strip() == "":
+            return {"answer": "Please provide a valid question.", "links": []}
 
         conn = get_db_connection()
         query_embedding = await process_multimodal_query(request.question, request.image)
@@ -189,20 +195,27 @@ async def query_knowledge_base(request: QueryRequest):
         llm_response = await generate_answer(request.question, enriched)
         result = parse_llm_response(llm_response)
 
-        if not result["links"]:
+        # Fallback link generation if none found from LLM
+        if not result.get("links"):
             urls = set()
             links = []
             for res in relevant[:5]:
                 if res["url"] not in urls:
                     urls.add(res["url"])
-                    snippet = res["content"][:100] + "..." if len(res["content"]) > 100 else res["content"]
+                    snippet = res["content"][:80].replace("\n", " ") + "..."
                     links.append({"url": res["url"], "text": snippet})
             result["links"] = links
 
-        return result
+        # Ensure final structure
+        return {
+            "answer": result.get("answer", "No answer generated."),
+            "links": result.get("links", [])
+        }
+
     except Exception as e:
         logger.error(f"Query error: {e}")
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        return JSONResponse(status_code=500, content={"answer": "An error occurred while processing your question.", "links": []})
+
 
 @app.get("/health")
 async def health_check():
