@@ -231,10 +231,12 @@ async def health_check():
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
+from fastapi import Request
 
-@app.get("/")
-async def root():
+@app.api_route("/", methods=["GET", "POST"])
+async def root(request: Request):
     return {"message": "✅ TDS Final Project is Live. Use /query or /health"}
+
 
 
 # --- MAIN ENTRY POINT ---
